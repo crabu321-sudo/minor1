@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shadow Chaser with Round Timer</title>
+    <style>
+        body { text-align:center; font-family:sans-serif; background:#222; color:white; }
+        canvas { background:#111; display:block; margin:auto; border:2px solid #555; }
+        h2 { color:#fff; }
+        #timer { font-size: 20px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Shadow Chaser</h2>
+    <canvas id="gameCanvas" width="500" height="400"></canvas>
+    <p>Score: <span id="score">0</span></p>
+    <p>Time Left: <span id="timer">3.0</span> s</p>
+    <button onclick="location.reload()">Restart Game</button>
+
+    <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const timerDisplay = document.getElementById("timer");
+
+    const player = {x: 250, y: 200, radius: 20};
+    const shadow = {x: 100, y: 100, radius: 15, speed: 2};
+    let score = 0;
+    let localHigh = parseInt(localStorage.getItem('shadowHighScore')) || 0;
+    let maxTime = 3.0;
+    let minTime = 1.0;
+    let timeLeft = maxTime;  // current countdown per round
+    let lastTime = Date.now();
+    let gameOver = false;
+
+    // Track mouse
+    canvas.addEventListener("mousemove", function(e){
+        const rect = canvas.getBoundingClientRect();
+        player.x = e.clientX - rect.left;
+        player.y = e.clientY - rect.top;
+    });
+
+    // Move shadow slightly randomly
+    function moveShadow(){
+        shadow.x += (Math.random()-0.5) * shadow.speed*2;
+        shadow.y += (Math.random()-0.5) * shadow.speed*2;
+        shadow.x = Math.max(shadow.radius, Math.min(canvas.width-shadow.radius, shadow.x));
+        shadow.y = Math.max(shadow.radius, Math.min(canvas.height-shadow.radius, shadow.y));
+    }
+
+    // Reset shadow position and round timer
+    function resetShadow(){
+        shadow.x = Math.random()*(canvas.width-2*shadow.radius)+shadow.radius;
+        shadow.y = Math.random()*(canvas.height-2*shadow.radius)+shadow.radius;
+        timeLeft = Math.max(maxTime - score*0.2, minTime); // reduce allowed time as score increases
+        lastTime = Date.now();
+    }
+
+    function update(){
+        if(gameOver) return;
+
+        // Timer countdown
+        const now = Date.now();
+        const delta = (now - lastTime)/1000; // seconds
+        lastTime = now;
+        timeLeft -= delta;
+
+        // Update timer display
+        timerDisplay.textContent = timeLeft.toFixed(1);
+
+        // If timer reaches 0 without catching shadow → game over
+        if(timeLeft <= 0){
+            gameOver = true;
+            if(score > localHigh) {
+                localHigh = score;
+                localStorage.setItem('shadowHighScore', localHigh);
+                window.saveHighScore(score);
+                alert(`New High Score! ${score}\nTime's up!`);
+            } else {
+                alert(`Time's up! You didn't catch the shadow.\nGame Over! Score: ${score}\nPersonal High: ${localHigh}`);
+            }
+            return;
+        }
+
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+
+        // Draw shadow
+        ctx.fillStyle="purple";
+        ctx.beginPath();
+        ctx.arc(shadow.x, shadow.y, shadow.radius,0,Math.PI*2);
+        ctx.fill();
+
+        // Draw player
+        ctx.fillStyle="cyan";
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius,0,Math.PI*2);
+        ctx.fill();
+
+        // Check collision
+        const dist = Math.hypot(player.x - shadow.x, player.y - shadow.y);
+        if(dist < player.radius + shadow.radius){
+            score++;
+            scoreDisplay.textContent = score;
+            shadow.speed += 0.3; // shadow gets faster
+            resetShadow(); // move shadow and reset timer for next round
+        }
+
+        moveShadow();
+        requestAnimationFrame(update);
+    }
+
+    resetShadow();
+    update();
+    </script>
+    <script type="module">
+        // ───────────────────────────────────────────────
+        // Firebase imports
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, push } from "firebase/database";
+
+        // Your Firebase config (same in all files)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXOT2qzwZBU6wZcOehquWl-8J5X5qeO-w",
+            authDomain: "mygamingplatform-ef2e5.firebaseapp.com",
+            databaseURL: "https://mygamingplatform-ef2e5-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mygamingplatform-ef2e5",
+            storageBucket: "mygamingplatform-ef2e5.firebasestorage.app",
+            messagingSenderId: "624947552097",
+            appId: "1:624947552097:web:b1886ea30f0de84eb12f20",
+            measurementId: "G-3ZXY51JHDP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ───────────────────────────────────────────────
+        // CHANGE THESE TWO LINES FOR EACH GAME
+
+        const GAME_KEY = "shadow";          // ← change this: "dino", "red", "circle", "chain", etc.
+        const IS_TIME_GAME = false;        // ← change to true for time-based games (lower time = better)
+
+        // ───────────────────────────────────────────────
+        // Call this function when the game ends / highscore is achieved
+
+        function saveHighScore(scoreValue) {
+            let playerName = prompt("Enter your name (or leave blank):") || "Anonymous";
+
+            const scoresRef = ref(db, `highscores/${GAME_KEY}`);
+
+            push(scoresRef, {
+                name: playerName,
+                score: scoreValue,
+                timestamp: Date.now()
+            })
+            .then(() => {
+                console.log(`High score saved for ${GAME_KEY}!`);
+            })
+            .catch((error) => {
+                console.error("Error saving score:", error);
+                alert("Could not save score. Check internet.");
+            });
+        }
+
+        window.saveHighScore = saveHighScore;
+    </script>
+</body>
+
+</html>

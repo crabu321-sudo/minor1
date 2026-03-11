@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dino Runner</title>
+    <style>
+        body { text-align:center; font-family:sans-serif; background:#f0f0f0; }
+        canvas { background:#87CEEB; display:block; margin:0 auto; border:2px solid #333; }
+        h2 { color:#333; }
+        button { margin-top:10px; padding:8px 15px; font-size:16px; cursor:pointer; }
+    </style>
+</head>
+<body>
+    <h2>Dino Runner</h2>
+    <canvas id="gameCanvas" width="800" height="300"></canvas>
+    <p>Score: <span id="score">0</span></p>
+    <button onclick="location.reload()">Back to Home</button>
+
+    <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    
+    // Dino setup
+    let dino = { x:50, y:250, width:40, height:40, dy:0, gravity:0.6, jumpPower:-12 };
+
+    let obstacles = [];
+    let score = 0;
+    let highScore = parseInt(localStorage.getItem('dino1HighScore')) || 0;
+    let gameOver = false;
+
+    // Starting speed
+    let speed = 4;  // slow at beginning
+
+    // Jump with space
+    document.addEventListener("keydown", (e) => {
+        if(e.code === "Space" && dino.y === 250) dino.dy = dino.jumpPower;
+    });
+
+    // Obstacle class
+    class Obstacle {
+        constructor() {
+            this.width = 30;
+            this.height = 40;
+            this.x = canvas.width; // start from right edge
+            this.y = 250;
+            this.passed = false;
+        }
+        draw() {
+            ctx.fillStyle = "red";
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+        update() {
+            this.x -= speed;
+            this.draw();
+        }
+    }
+
+    // Spawn obstacles at random intervals
+    function spawnObstacle() {
+        if(!gameOver) obstacles.push(new Obstacle());
+    }
+    setInterval(() => {
+        if(!gameOver) spawnObstacle();
+    }, Math.random() * 1500 + 1500); // 1.5–3 sec random interval
+
+    // Game loop
+    function update() {
+        if(gameOver) return;
+
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+
+        // Dino physics
+        dino.dy += dino.gravity;
+        dino.y += dino.dy;
+        if(dino.y > 250) { dino.y = 250; dino.dy = 0; }
+
+        // Draw Dino
+        ctx.fillStyle = "green";
+        ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+
+        // Update obstacles
+        for(let i = obstacles.length-1; i >= 0; i--) {
+            let ob = obstacles[i];
+            ob.update();
+
+            // Collision detection
+            if(dino.x < ob.x + ob.width &&
+               dino.x + dino.width > ob.x &&
+               dino.y < ob.y + ob.height &&
+               dino.y + dino.height > ob.y) {
+                gameOver = true;
+                let msg = `Game Over! Score: ${score}`;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('dino1HighScore', highScore);
+                    window.saveHighScore(score);
+                    msg += `\nNew High Score! 🎉`;
+                } else {
+                    msg += `\nHigh Score: ${highScore}`;
+                }
+                alert(msg);
+                return;
+            }
+
+            // Update score
+            if(!ob.passed && ob.x + ob.width < dino.x) {
+                ob.passed = true;
+                score++;
+                scoreDisplay.textContent = score;
+
+                // Increase speed gradually every 10 points
+                if(score % 10 === 0) {
+                    speed += 1;
+                }
+            }
+
+            // Remove obstacles that moved off screen
+            if(ob.x + ob.width < 0) obstacles.splice(i,1);
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    update();
+    </script>
+    <script type="module">
+        // ───────────────────────────────────────────────
+        // Firebase imports
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, push } from "firebase/database";
+
+        // Your Firebase config (same in all files)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXOT2qzwZBU6wZcOehquWl-8J5X5qeO-w",
+            authDomain: "mygamingplatform-ef2e5.firebaseapp.com",
+            databaseURL: "https://mygamingplatform-ef2e5-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mygamingplatform-ef2e5",
+            storageBucket: "mygamingplatform-ef2e5.firebasestorage.app",
+            messagingSenderId: "624947552097",
+            appId: "1:624947552097:web:b1886ea30f0de84eb12f20",
+            measurementId: "G-3ZXY51JHDP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ───────────────────────────────────────────────
+        // CHANGE THESE TWO LINES FOR EACH GAME
+
+        const GAME_KEY = "dino1";          // ← change this: "dino", "red", "circle", "chain", etc.
+        const IS_TIME_GAME = false;        // ← change to true for time-based games (lower time = better)
+
+        // ───────────────────────────────────────────────
+        // Call this function when the game ends / highscore is achieved
+
+        function saveHighScore(scoreValue) {
+            let playerName = prompt("Enter your name (or leave blank):") || "Anonymous";
+
+            const scoresRef = ref(db, `highscores/${GAME_KEY}`);
+
+            push(scoresRef, {
+                name: playerName,
+                score: scoreValue,
+                timestamp: Date.now()
+            })
+            .then(() => {
+                console.log(`High score saved for ${GAME_KEY}!`);
+            })
+            .catch((error) => {
+                console.error("Error saving score:", error);
+                alert("Could not save score. Check internet.");
+            });
+        }
+
+        window.saveHighScore = saveHighScore;
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Memory Flash</title>
+<style>
+body{
+    text-align:center;
+    font-family:sans-serif;
+    background:#222;
+    color:white;
+}
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,100px);
+    gap:10px;
+    justify-content:center;
+    margin-top:20px;
+}
+.box{
+    width:100px;
+    height:100px;
+    background:#555;
+    cursor:pointer;
+}
+.active{
+    background:yellow;
+}
+</style>
+</head>
+<body>
+
+<h2>Memory Flash</h2>
+<p>Level: <span id="level">1</span></p>
+<p>High Score: <span id="highScore">0</span></p>
+
+<div class="grid">
+    <div class="box" data-index="0"></div>
+    <div class="box" data-index="1"></div>
+    <div class="box" data-index="2"></div>
+    <div class="box" data-index="3"></div>
+</div>
+
+<script>
+let sequence = [];
+let playerIndex = 0;
+let level = 1;
+let highScore = parseInt(localStorage.getItem('flashHighScore')) || 0;
+let canClick = false;
+
+const boxes = document.querySelectorAll(".box");
+const levelDisplay = document.getElementById("level");
+const highScoreDisplay = document.getElementById("highScore");
+highScoreDisplay.textContent = highScore;
+
+// Start first level
+startLevel();
+
+function startLevel(){
+    playerIndex = 0;
+    canClick = false;
+    levelDisplay.textContent = level;
+
+    sequence.push(Math.floor(Math.random()*4));
+    playSequence();
+}
+
+function playSequence(){
+    let i = 0;
+
+    const interval = setInterval(() => {
+        const box = boxes[sequence[i]];
+        box.classList.add("active");
+
+        setTimeout(() => {
+            box.classList.remove("active");
+        }, 400);
+
+        i++;
+
+        if(i >= sequence.length){
+            clearInterval(interval);
+            setTimeout(() => {
+                canClick = true;
+            }, 500);
+        }
+    }, 800);
+}
+
+boxes.forEach(box => {
+    box.addEventListener("click", () => {
+        if(!canClick) return;
+
+        const index = Number(box.dataset.index);
+
+        // Visual click effect
+        box.classList.add("active");
+        setTimeout(() => box.classList.remove("active"), 200);
+
+        if(index === sequence[playerIndex]){
+            playerIndex++;
+            if(playerIndex === sequence.length){
+                level++;
+                setTimeout(startLevel, 800);
+            }
+        } else {
+            // Game over - reached level (failed current, so reached level-1, but using level as approx)
+            const reachedLevel = level;
+            if (reachedLevel > highScore) {
+                highScore = reachedLevel;
+                localStorage.setItem('flashHighScore', highScore);
+                highScoreDisplay.textContent = highScore;
+                window.saveHighScore(reachedLevel);
+                alert("New High Score! Level " + reachedLevel);
+            } else {
+                alert("Game Over! You reached Level " + reachedLevel + "\nHigh Score: " + highScore);
+            }
+            location.reload();
+        }
+    });
+});
+</script>
+<script type="module">
+    // ───────────────────────────────────────────────
+    // Firebase imports
+    import { initializeApp } from "firebase/app";
+    import { getDatabase, ref, push } from "firebase/database";
+
+    // Your Firebase config (same in all files)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBXOT2qzwZBU6wZcOehquWl-8J5X5qeO-w",
+        authDomain: "mygamingplatform-ef2e5.firebaseapp.com",
+        databaseURL: "https://mygamingplatform-ef2e5-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "mygamingplatform-ef2e5",
+        storageBucket: "mygamingplatform-ef2e5.firebasestorage.app",
+        messagingSenderId: "624947552097",
+        appId: "1:624947552097:web:b1886ea30f0de84eb12f20",
+        measurementId: "G-3ZXY51JHDP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ───────────────────────────────────────────────
+    // CHANGE THESE TWO LINES FOR EACH GAME
+
+    const GAME_KEY = "flash";          // ← change this: "dino", "red", "circle", "chain", etc.
+    const IS_TIME_GAME = false;        // ← change to true for time-based games (lower time = better)
+
+    // ───────────────────────────────────────────────
+    // Call this function when the game ends / highscore is achieved
+
+    function saveHighScore(scoreValue) {
+        let playerName = prompt("Enter your name (or leave blank):") || "Anonymous";
+
+        const scoresRef = ref(db, `highscores/${GAME_KEY}`);
+
+        push(scoresRef, {
+            name: playerName,
+            score: scoreValue,
+            timestamp: Date.now()
+        })
+        .then(() => {
+            console.log(`High score saved for ${GAME_KEY}!`);
+        })
+        .catch((error) => {
+            console.error("Error saving score:", error);
+            alert("Could not save score. Check internet.");
+        });
+    }
+
+    window.saveHighScore = saveHighScore;
+</script>
+</body>
+</html>

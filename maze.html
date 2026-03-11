@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Maze Escape - Fixed Levels</title>
+<style>
+body{
+    text-align:center;
+    background:#111;
+    color:white;
+    font-family:sans-serif;
+}
+canvas{
+    background:#222;
+    display:block;
+    margin:20px auto;
+}
+</style>
+</head>
+<body>
+
+<h2>Maze Escape</h2>
+<p>Level: <span id="level">1</span></p>
+<p>Best Level Reached: <span id="highScore">1</span></p>
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let player, goal;
+let walls = [];
+let level = 1;
+let maxLevel = 3;
+let gameOver = false;
+let highScore = parseInt(localStorage.getItem('mazeHighScore')) || 1;
+document.getElementById("highScore").textContent = highScore;
+
+/* ===== FIXED LEVELS ===== */
+const levels = {
+    1: [
+        {x:100,y:0,w:20,h:250},
+        {x:200,y:150,w:20,h:250},
+        {x:300,y:0,w:20,h:250},
+        {x:50,y:300,w:250,h:20}
+    ],
+    2: [
+        {x:50,y:50,w:300,h:20},
+        {x:50,y:50,w:20,h:250},
+        {x:330,y:120,w:20,h:230},
+        {x:100,y:150,w:200,h:20},
+        {x:50,y:300,w:250,h:20}
+    ],
+    3: [
+        {x:80,y:0,w:20,h:220},
+        {x:160,y:180,w:20,h:220},
+        {x:240,y:0,w:20,h:220},
+        {x:320,y:180,w:20,h:220},
+        {x:0,y:250,w:200,h:20}
+    ]
+};
+
+function init(){
+    player = {x:20, y:20, size:20, speed:5};
+    goal = {x:350, y:350, size:30};
+    walls = levels[level];
+    gameOver = false;
+    document.getElementById("level").textContent = level;
+}
+
+document.addEventListener("keydown", e=>{
+    if(gameOver) return;
+
+    let newX = player.x;
+    let newY = player.y;
+
+    if(e.key==="ArrowUp") newY -= player.speed;
+    if(e.key==="ArrowDown") newY += player.speed;
+    if(e.key==="ArrowLeft") newX -= player.speed;
+    if(e.key==="ArrowRight") newX += player.speed;
+
+    if(newX < 0 || newX > 400-player.size) return;
+    if(newY < 0 || newY > 400-player.size) return;
+
+    let hitWall = walls.some(w =>
+        newX < w.x + w.w &&
+        newX + player.size > w.x &&
+        newY < w.y + w.h &&
+        newY + player.size > w.y
+    );
+
+    if(!hitWall){
+        player.x = newX;
+        player.y = newY;
+    }
+});
+
+function update(){
+    ctx.clearRect(0,0,400,400);
+
+    ctx.fillStyle="green";
+    ctx.fillRect(goal.x, goal.y, goal.size, goal.size);
+
+    ctx.fillStyle="cyan";
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    ctx.fillStyle="red";
+    walls.forEach(w=>{
+        ctx.fillRect(w.x,w.y,w.w,w.h);
+    });
+
+    if(player.x < goal.x + goal.size &&
+       player.x + player.size > goal.x &&
+       player.y < goal.y + goal.size &&
+       player.y + player.size > goal.y){
+
+        gameOver = true;
+
+        setTimeout(()=>{
+            if(level > highScore){
+                highScore = level;
+                localStorage.setItem('mazeHighScore', highScore);
+                document.getElementById("highScore").textContent = highScore;
+                window.saveHighScore(level);
+                alert(`New Best! You reached level ${level}!`);
+            } else {
+                alert(`Level ${level} completed!\nBest: ${highScore}`);
+            }
+
+            if(level < maxLevel){
+                level++;
+                init();
+            } else {
+                alert("🏆 You completed ALL levels!\nBest level: " + highScore);
+                level = 1;
+                init();
+            }
+            gameOver = false;
+        },200);
+    }
+
+    requestAnimationFrame(update);
+}
+
+init();
+update();
+</script>
+<script type="module">
+    // ───────────────────────────────────────────────
+    // Firebase imports
+    import { initializeApp } from "firebase/app";
+    import { getDatabase, ref, push } from "firebase/database";
+
+    // Your Firebase config (same in all files)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBXOT2qzwZBU6wZcOehquWl-8J5X5qeO-w",
+        authDomain: "mygamingplatform-ef2e5.firebaseapp.com",
+        databaseURL: "https://mygamingplatform-ef2e5-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "mygamingplatform-ef2e5",
+        storageBucket: "mygamingplatform-ef2e5.firebasestorage.app",
+        messagingSenderId: "624947552097",
+        appId: "1:624947552097:web:b1886ea30f0de84eb12f20",
+        measurementId: "G-3ZXY51JHDP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ───────────────────────────────────────────────
+    // CHANGE THESE TWO LINES FOR EACH GAME
+
+    const GAME_KEY = "maze";          // ← change this: "dino", "red", "circle", "chain", etc.
+    const IS_TIME_GAME = false;        // ← change to true for time-based games (lower time = better)
+
+    // ───────────────────────────────────────────────
+    // Call this function when the game ends / highscore is achieved
+
+    function saveHighScore(scoreValue) {
+        let playerName = prompt("Enter your name (or leave blank):") || "Anonymous";
+
+        const scoresRef = ref(db, `highscores/${GAME_KEY}`);
+
+        push(scoresRef, {
+            name: playerName,
+            score: scoreValue,
+            timestamp: Date.now()
+        })
+        .then(() => {
+            console.log(`High score saved for ${GAME_KEY}!`);
+        })
+        .catch((error) => {
+            console.error("Error saving score:", error);
+            alert("Could not save score. Check internet.");
+        });
+    }
+
+    window.saveHighScore = saveHighScore;
+</script>
+</body>
+</html>

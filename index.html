@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Gaming Platform</title>
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --dark: #0f2027;
+            --mid: #203a43;
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+            background: linear-gradient(-45deg, var(--dark), var(--mid), #2c5364, #1c1c1c);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        canvas#bg {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+        header {
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(6px);
+            padding: 1.8rem;
+            text-align: center;
+            font-size: 2.1rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(0,255,255,0.18);
+            animation: fadeIn 1.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 28px;
+            padding: 40px 5vw;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .game-card {
+            background: rgba(0,0,0,0.58);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.35s ease;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid rgba(0,255,255,0.22);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .game-card:hover {
+            transform: translateY(-12px) scale(1.06);
+            box-shadow: 0 12px 35px rgba(0, 255, 255, 0.28);
+            border-color: var(--cyan);
+        }
+        .game-card:active {
+            transform: translateY(-4px) scale(0.98);
+            transition: all 0.12s ease;
+        }
+        .game-image {
+            height: 160px;
+            background: linear-gradient(135deg, #141e30, #1e3a5f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: rgba(255,255,255,0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        .game-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .game-card:hover .game-image img {
+            transform: scale(1.08);
+        }
+        .game-name {
+            margin: 14px 10px 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .high-score {
+            margin: 5px 10px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.5);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+    <header>My Gaming Platform</header>
+    <div class="games-container">
+        <!-- Ball Catch -->
+        <a href="ball.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/00ffff/000000?text=Ball+Catch" alt="Ball Catch">
+            </div>
+            <div class="game-name">Ball Catch</div>
+            <div class="high-score">High Score: <span id="ball-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="ball-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Click the Circle -->
+        <a href="circle1.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/ff0000/ffffff?text=Click+Circle" alt="Click the Circle">
+            </div>
+            <div class="game-name">Click the Circle</div>
+            <div class="high-score">High Score: <span id="circle1-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="circle1-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Dino Runner -->
+        <a href="dino1.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/00ff00/000000?text=Dino+Runner" alt="Dino Runner">
+            </div>
+            <div class="game-name">Dino Runner</div>
+            <div class="high-score">High Score: <span id="dino1-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="dino1-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Car Dodge -->
+        <a href="doit.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/0000ff/ffffff?text=Car+Dodge" alt="Car Dodge">
+            </div>
+            <div class="game-name">Car Dodge</div>
+            <div class="high-score">High Score: <span id="doit-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="doit-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Memory Flash -->
+        <a href="flash.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/ffff00/000000?text=Memory+Flash" alt="Memory Flash">
+            </div>
+            <div class="game-name">Memory Flash</div>
+            <div class="high-score">High Score: <span id="flash-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="flash-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Chain Reaction -->
+        <a href="chain.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/ff00ff/ffffff?text=Chain+Reaction" alt="Chain Reaction">
+            </div>
+            <div class="game-name">Chain Reaction</div>
+            <div class="high-score">High Score: <span id="chain-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="chain-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Shadow Chaser -->
+        <a href="shadow.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/800080/ffffff?text=Shadow+Chaser" alt="Shadow Chaser">
+            </div>
+            <div class="game-name">Shadow Chaser</div>
+            <div class="high-score">High Score: <span id="shadow-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="shadow-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Snake Game -->
+        <a href="snake.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/00ff00/000000?text=Snake" alt="Snake Game">
+            </div>
+            <div class="game-name">Snake Game</div>
+            <div class="high-score">High Score: <span id="snake-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="snake-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Escape the Walls -->
+        <a href="wall.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/ff0000/ffffff?text=Escape+Walls" alt="Escape the Walls">
+            </div>
+            <div class="game-name">Escape the Walls</div>
+            <div class="high-score">High Score: <span id="wall-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="wall-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Maze Escape -->
+        <a href="maze.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/8b4513/ffffff?text=Maze+Escape" alt="Maze Escape">
+            </div>
+            <div class="game-name">Maze Escape</div>
+            <div class="high-score">High Score: <span id="maze-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="maze-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Reverse Controls -->
+        <a href="reverse.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/808080/ffffff?text=Reverse+Controls" alt="Reverse Controls">
+            </div>
+            <div class="game-name">Reverse Controls</div>
+            <div class="high-score">High Score: <span id="reverse-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="reverse-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+
+        <!-- Don't Touch Red -->
+        <a href="red.html" class="game-card">
+            <div class="game-image">
+                <img loading="lazy" src="https://via.placeholder.com/240x160/ff0000/ffffff?text=Dont+Touch+Red" alt="Don't Touch Red">
+            </div>
+            <div class="game-name">Don't Touch Red</div>
+            <div class="high-score">High Score: <span id="red-high">—</span></div>
+            <h5 style="margin:10px 0 5px; color:#00ffcc;">Top Scores</h5>
+            <ol id="red-leaderboard" style="margin:0 10px 10px; padding-left:20px; font-size:0.95rem;"></ol>
+        </a>
+    </div>
+
+    <footer>
+        © Minor Project - GROUP 1 Abhay S R, S4 Computer Engineering, MTI Thrissur
+    </footer>
+
+    <script>
+        // Floating cyan particles
+        const canvas = document.getElementById("bg");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        for(let i = 0; i < 140; i++){
+            particles.push({
+                x: Math.random()*canvas.width,
+                y: Math.random()*canvas.height,
+                r: Math.random()*2.2 + 0.8,
+                dx: Math.random()*1.2 - 0.6,
+                dy: Math.random()*1.2 - 0.6
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+                if(p.x < 0 || p.x > canvas.width) p.dx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.dy *= -1;
+                ctx.shadowColor = "#00ffff";
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = "rgba(0,255,255,0.65)";
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXOT2qzwZBU6wZcOehquWl-8J5X5qeO-w",
+            authDomain: "mygamingplatform-ef2e5.firebaseapp.com",
+            databaseURL: "https://mygamingplatform-ef2e5-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mygamingplatform-ef2e5",
+            storageBucket: "mygamingplatform-ef2e5.firebasestorage.app",
+            messagingSenderId: "624947552097",
+            appId: "1:624947552097:web:b1886ea30f0de84eb12f20",
+            measurementId: "G-3ZXY51JHDP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function loadLeaderboards() {
+            const games = ['ball', 'circle1', 'dino1', 'doit', 'flash', 'chain', 'shadow', 'snake', 'wall', 'maze', 'reverse', 'red'];
+            for (const key of games) {
+                const scoresRef = ref(db, `highscores/${key}`);
+                get(scoresRef).then((snapshot) => {
+                    const ol = document.getElementById(`${key}-leaderboard`);
+                    const highSpan = document.getElementById(`${key}-high`);
+                    ol.innerHTML = '';
+                    if (snapshot.exists()) {
+                        const scores = [];
+                        snapshot.forEach((child) => {
+                            const val = child.val();
+                            scores.push({ name: val.name, score: val.score, timestamp: val.timestamp });
+                        });
+                        scores.sort((a, b) => b.score - a.score);
+                        const top3 = scores.slice(0, 3);
+                        top3.forEach((s) => {
+                            const li = document.createElement('li');
+                            li.textContent = `${s.name}: ${s.score}`;
+                            ol.appendChild(li);
+                        });
+                        if (highSpan && top3[0]) {
+                            highSpan.textContent = top3[0].score;
+                        }
+                    } else if (highSpan) {
+                        highSpan.textContent = '—';
+                    }
+                }).catch((error) => {
+                    console.error(`Error loading ${key} scores:`, error);
+                });
+            }
+        }
+
+        loadLeaderboards();
+    </script>
+</body>
+</html>
